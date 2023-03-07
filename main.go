@@ -33,6 +33,14 @@ func main() {
 	var client *ssh.Client
 	var err error
 
+	servertext, err := pkg.ReadServer("servers.txt")
+	for _, line := range servertext {
+		fmt.Println(line)
+	}
+	fmt.Println(servertext)
+
+	// Meter toda la conexión en una función para que se ejecute en el for
+
 	if server != "" {
 		client, err = ssh.Dial("tcp", server+":"+port, config)
 	} else {
