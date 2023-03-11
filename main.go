@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"ssh-upload/pkg"
 	"strings"
 	"sync"
@@ -20,6 +21,11 @@ func main() {
 	flag.Parse()
 
 	env := pkg.GetEnvVariable("PASSWORD")
+	if !pkg.FlagPassed("server") && pkg.FlagPassed("port") {
+		fmt.Println("Si indicas el puerto, también tienes que indicar el servidor")
+		os.Exit(0)
+	}
+
 	if pkg.FlagPassed("server") {
 		wg.Add(1)
 		go pkg.ConnectSSH(username, port, env, server, command, wg)
