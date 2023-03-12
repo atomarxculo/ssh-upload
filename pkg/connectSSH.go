@@ -73,7 +73,7 @@ func uploadFileSCP(config *ssh.ClientConfig, server string, localfile string, re
 	f, _ := os.Open(localfile)
 	defer client.Close()
 	defer f.Close()
-	err = client.CopyFromFile(context.Background(), *f, remotefile+localfile, "0665")
+	err = client.CopyFromFile(context.Background(), *f, remotefile+localfile, "0644")
 	if err != nil {
 		fmt.Println(err)
 	}
