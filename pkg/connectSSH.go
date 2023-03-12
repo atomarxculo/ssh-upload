@@ -2,12 +2,14 @@ package pkg
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"sync"
 
-	"github.com/tmc/scp"
+	scp "github.com/bramvdbogaerde/go-scp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -16,7 +18,7 @@ var (
 	err    error
 )
 
-func ConnectSSH(username string, port string, password string, server string, command string, file string, wg *sync.WaitGroup) {
+func ConnectSSH(username string, port string, password string, server string, command string, localfile string, remotefile string, wg *sync.WaitGroup) {
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
@@ -44,7 +46,9 @@ func ConnectSSH(username string, port string, password string, server string, co
 	defer session.Close()
 
 	commandSSH(session, command, server)
-	uploadFileSCP(session, server, file)
+	if localfile != "" {
+		uploadFileSCP(config, server, localfile, remotefile)
+	}
 
 	wg.Done()
 
@@ -60,7 +64,17 @@ func commandSSH(session *ssh.Session, command string, server string) {
 	fmt.Println("Output comando:", b.String())
 }
 
-func uploadFileSCP(session *ssh.Session, server string, file string) {
-	dest := "/var/tmp/fichero.txt"
-	scp.CopyPath(file, dest, session)
+func uploadFileSCP(config *ssh.ClientConfig, server string, localfile string, remotefile string) {
+	client := scp.NewClient(server, config)
+	err := client.Connect()
+	if err != nil {
+		fmt.Println()
+	}
+	f, _ := os.Open(localfile)
+	defer client.Close()
+	defer f.Close()
+	err = client.CopyFromFile(context.Background(), *f, remotefile+localfile, "0665")
+	if err != nil {
+		fmt.Println(err)
+	}
 }

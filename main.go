@@ -19,7 +19,7 @@ func main() {
 	flag.StringVar(&password, "pass", "", "Contraseña, por defecto lee la variable PASSWORD en el .env que se encuentre del mismo directorio.")
 	flag.StringVar(&command, "command", "hostname", "Comando que va a ejecutar en el servidor.")
 	flag.StringVar(&localfile, "localfile", "", "Fichero local a subir")
-	flag.StringVar(&remotefile, "remotefile", "", "Destino del fichero")
+	flag.StringVar(&remotefile, "remotefile", "/var/tmp/", "Destino del fichero")
 	flag.Parse()
 
 	env := pkg.GetEnvVariable("PASSWORD")
@@ -33,7 +33,7 @@ func main() {
 
 	if pkg.FlagPassed("server") {
 		wg.Add(1)
-		go pkg.ConnectSSH(username, port, env, server, command, localfile, wg)
+		go pkg.ConnectSSH(username, port, env, server, command, localfile, remotefile, wg)
 		wg.Wait()
 	} else {
 		if strings.Contains(server, ":") {
@@ -45,7 +45,7 @@ func main() {
 		}
 		for _, serverline := range servertext {
 			wg.Add(1)
-			go pkg.ConnectSSH(username, port, env, serverline, command, localfile, wg)
+			go pkg.ConnectSSH(username, port, env, serverline, command, localfile, remotefile, wg)
 		}
 		wg.Wait()
 	}
