@@ -29,6 +29,9 @@ func main() {
 	} else if !pkg.FlagPassed("server") && !pkg.FlagPassed("user") {
 		fmt.Println("Tienes que indicar un usuario para poder conectarte.")
 		os.Exit(0)
+	} else if pkg.FlagPassed("remotefile") && !pkg.FlagPassed("localfile") {
+		fmt.Println("Tienes que elegir un fichero local que subir")
+		os.Exit(0)
 	}
 
 	if pkg.FlagPassed("server") {
