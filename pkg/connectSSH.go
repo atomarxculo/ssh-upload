@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/tmc/scp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -15,7 +16,7 @@ var (
 	err    error
 )
 
-func ConnectSSH(username string, port string, password string, server string, command string, wg *sync.WaitGroup) {
+func ConnectSSH(username string, port string, password string, server string, command string, file string, wg *sync.WaitGroup) {
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
@@ -42,6 +43,14 @@ func ConnectSSH(username string, port string, password string, server string, co
 
 	defer session.Close()
 
+	commandSSH(session, command, server)
+	uploadFileSCP(session, server, file)
+
+	wg.Done()
+
+}
+
+func commandSSH(session *ssh.Session, command string, server string) {
 	var b bytes.Buffer
 	session.Stdout = &b
 	if err := session.Run(command); err != nil {
@@ -49,7 +58,9 @@ func ConnectSSH(username string, port string, password string, server string, co
 	}
 	fmt.Println("Servidor:", server)
 	fmt.Println("Output comando:", b.String())
+}
 
-	wg.Done()
-
+func uploadFileSCP(session *ssh.Session, server string, file string) {
+	dest := "/var/tmp/fichero.txt"
+	scp.CopyPath(file, dest, session)
 }
