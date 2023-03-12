@@ -18,7 +18,7 @@ var (
 	err    error
 )
 
-func ConnectSSH(username string, port string, password string, server string, command string, localfile string, remotefile string, wg *sync.WaitGroup) {
+func ConnectSSH(username string, port string, password string, server string, command string, localfile string, remotepath string, wg *sync.WaitGroup) {
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
@@ -45,9 +45,11 @@ func ConnectSSH(username string, port string, password string, server string, co
 
 	defer session.Close()
 
-	commandSSH(session, command, server)
+	if command != "" {
+		commandSSH(session, command, server)
+	}
 	if localfile != "" {
-		uploadFileSCP(config, server, localfile, remotefile)
+		uploadFileSCP(config, server, localfile, remotepath)
 	}
 
 	wg.Done()
@@ -64,7 +66,8 @@ func commandSSH(session *ssh.Session, command string, server string) {
 	fmt.Println("Output comando:", b.String())
 }
 
-func uploadFileSCP(config *ssh.ClientConfig, server string, localfile string, remotefile string) {
+func uploadFileSCP(config *ssh.ClientConfig, server string, localfile string, remotepath string) {
+	fullpath := remotepath + localfile
 	client := scp.NewClient(server, config)
 	err := client.Connect()
 	if err != nil {
@@ -73,7 +76,7 @@ func uploadFileSCP(config *ssh.ClientConfig, server string, localfile string, re
 	f, _ := os.Open(localfile)
 	defer client.Close()
 	defer f.Close()
-	err = client.CopyFromFile(context.Background(), *f, remotefile+localfile, "0644")
+	err = client.CopyFromFile(context.Background(), *f, fullpath, "0644")
 	if err != nil {
 		fmt.Println(err)
 	}
